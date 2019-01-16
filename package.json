@@ -1,0 +1,14 @@
+{
+  "name": "eth-storage-analyze",
+  "version": "1.0.0",
+  "description": "An analyzing project for eth storage analyze",
+  "main": "index.js",
+  "repository": "https://github.com/Mine77/eth-storage-analyze.git",
+  "author": "Haichao <haichaozhu77@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "level": "^4.0.0",
+    "merkle-patricia-tree": "^3.0.0",
+    "web3": "^1.0.0-beta.37"
+  }
+}
