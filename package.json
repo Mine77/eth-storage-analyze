@@ -9,6 +9,7 @@
   "dependencies": {
     "level": "^4.0.0",
     "merkle-patricia-tree": "^3.0.0",
+    "rlp": "^2.2.2",
     "web3": "^1.0.0-beta.37"
   }
 }
