@@ -9,25 +9,37 @@ ipcAddress = "/Users/haichaozhu/Library/Ethereum/geth.ipc"
 var net = require('net');
 var web3 = new Web3(ipcAddress, net);
 
-function getBatchStaterRoot(height) {
-    var stateRootList = {};
-    var batch = new web3.BatchRequest();
+// return a batch block request, given the latest height and the step
+function getBatchStateRoot(height, step) {
+    const batchRequests =
+        Object.keys(
+            Array.from({
+                length: height
+            })
+        ).filter(
+            // get needed block height according to the step
+            _height => (_height % step === 1)
+        ).map(
+            // return the promise function according to the height
+            _height => web3.eth.getBlock(_height)
+        )
 
-    for (i = 1; i < height; i = i + BlockStep) {
-        console.log(i);
-        batch.add(web3.eth.getBlock(i, function (error, block) {
-            if (error)
-                console.log(error)
-            else {
-                if (block != null) {
-                    stateRootList[i] = block.stateRoot;
-                    console.log(i + '\t' + block.stateRoot)
-                }
-            }
-        }))
-    }
-
-    batch.execute();
+    return Promise.all(batchRequests)
 }
 
-web3.eth.getBlockNumber().then(number => getBatchStaterRoot(number))
+
+// geth tip block height, then get batch block request, then make stateRoot list array, then store a JSON file
+web3.eth.getBlockNumber()
+    .then(number => getBatchStateRoot(number, BlockStep))
+    .then(blocks => {
+        var StateRootList = {};
+        blocks.forEach(block => {
+            StateRootList[block.number] = block.stateRoot;
+            // console.log(block.number + '\t' + block.stateRoot)
+        });
+        var fs = require('fs');
+        fs.writeFile('StateRootList.json', JSON.stringify(StateRootList), 'utf8', function (err) {
+            if (err) throw err;
+            console.log('complete');
+        });
+    })
