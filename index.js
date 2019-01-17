@@ -1,16 +1,18 @@
-var Trie = require('merkle-patricia-tree/secure');
-var levelup = require('levelup');
-var leveldown = require('leveldown');
-var rlp = require('rlp');
+const Trie = require('merkle-patricia-tree/secure');
+const levelup = require('levelup');
+const leveldown = require('leveldown');
+const rlp = require('rlp');
+
+const config = require("./config.json")
 
 const emptyStateRoot = '56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
 
 // Connect to the chaindata db
-var db = levelup(leveldown('/Users/haichaozhu/Library/Ethereum/geth/chaindata'));
+const db = levelup(leveldown(config.DB_ADDRESS));
 
 // streamTrie and print a list of keys and values
 function streamStateTrie(stateroot) {
-    var trie = new Trie(db, stateroot);
+    const trie = new Trie(db, stateroot);
     var count = 0;
     var contractCount = 0;
     trie.createReadStream()
@@ -40,7 +42,7 @@ function streamStateTrie(stateroot) {
 
 // stream storage trie and print its size
 function streamStorageTrie(key, storageroot) {
-    var trie = new Trie(db, storageroot);
+    const trie = new Trie(db, storageroot);
     var count = 0;
     trie.createReadStream()
         .on('data', function (data) {
