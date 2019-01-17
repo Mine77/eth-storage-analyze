@@ -1,13 +1,13 @@
+// run this script to get a list of script list
 var Web3 = require('web3');
 
-// get stateRoot every BlockStep, the last number is days
-const BlockStep = (60 * 60 * 24 / 15) * 5;
+const config = require('./config.json');
 
-ipcAddress = "/Users/haichaozhu/Library/Ethereum/geth.ipc"
+rpcAddress = config.RPC_ADDRESS;
+BlockStep = config.BLOCK_STEP;
 
 // connect to geth using the IPC provider
-var net = require('net');
-var web3 = new Web3(ipcAddress, net);
+var web3 = new Web3(rpcAddress);
 
 // return a batch block request, given the latest height and the step
 function getBatchStateRoot(height, step) {
