@@ -62,3 +62,6 @@ typings/
 
 # temp files
 *.temp
+
+# config files
+config.json
