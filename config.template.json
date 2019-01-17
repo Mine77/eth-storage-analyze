@@ -1,0 +1,7 @@
+{
+    "IPC_ADDRESS": "/Users/User/Library/Ethereum/geth.ipc",
+    "RPC_ADDRESS": "http://0.0.0.0:8545/",
+    "DB_ADDRESS": "/Users/User/Library/Ethereum/geth/chaindata",
+    "BLOCK_STEP": 28800
+
+}
