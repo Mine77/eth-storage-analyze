@@ -23,7 +23,7 @@ function getBatchStateRoot(height, step) {
             })
         ).filter(
             // get needed block height according to the step
-            _height => (_height % step === 1)
+            _height => (_height % step === 1 || _height===height)
         ).map(
             // return the promise function according to the height
             _height => web3.eth.getBlock(_height)
