@@ -38,7 +38,7 @@ web3.eth.getBlockNumber()
             // console.log(block.number + '\t' + block.stateRoot)
         });
         var fs = require('fs');
-        fs.writeFile('StateRootList.json', JSON.stringify(StateRootList), 'utf8', function (err) {
+        fs.writeFile('./output/StateRootList.json', JSON.stringify(StateRootList), 'utf8', function (err) {
             if (err) throw err;
             console.log('complete');
         });
