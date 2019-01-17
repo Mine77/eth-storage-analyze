@@ -3,11 +3,16 @@ var Web3 = require('web3');
 
 const config = require('./config.json');
 
-rpcAddress = config.RPC_ADDRESS;
 BlockStep = config.BLOCK_STEP;
 
-// connect to geth using the IPC provider
-var web3 = new Web3(rpcAddress);
+if (config.CONNECT_WITH_RPC) {
+    // connect to node using the RPC endpoint
+    var web3 = new Web3(config.RPC_ADDRESS);
+} else {
+    //connect to geth using the IPC endpoint
+    var net = require('net');
+    var web3 = new Web3(config.IPC_ADDRESS, net);
+}
 
 // return a batch block request, given the latest height and the step
 function getBatchStateRoot(height, step) {
