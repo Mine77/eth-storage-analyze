@@ -2,6 +2,8 @@
     "IPC_ADDRESS": "/Users/User/Library/Ethereum/geth.ipc",
     "RPC_ADDRESS": "http://0.0.0.0:8545/",
     "DB_ADDRESS": "/Users/User/Library/Ethereum/geth/chaindata",
+    "STATE_ROOT_OUTPUT_ADDRESS": "./output/StateRootList.json",
+    "STATE_ROOT_INPUT_ADDRESS": "./output/StateRootList.json",
     "BLOCK_STEP": 28800,
     "CONNECT_WITH_RPC": false
 
