@@ -67,4 +67,4 @@ typings/
 config.json
 
 # output
-output/
+output/*
