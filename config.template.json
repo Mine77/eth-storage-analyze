@@ -4,7 +4,9 @@
     "DB_ADDRESS": "/Users/User/Library/Ethereum/geth/chaindata",
     "STATE_ROOT_OUTPUT_ADDRESS": "./output/StateRootList.json",
     "STATE_ROOT_INPUT_ADDRESS": "./output/StateRootList.json",
+    "ACCOUNT_ADDRESS_LIST": "./output/accounts.json",
     "BLOCK_STEP": 28800,
-    "CONNECT_WITH_RPC": false
+    "CONNECT_WITH_RPC": false,
+    "RESULT_ADDRESS" : "./output.result.json"
 
 }
