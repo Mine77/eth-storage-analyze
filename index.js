@@ -1,26 +1,33 @@
-const Trie = require('merkle-patricia-tree/secure');
+const Trie = require('merkle-patricia-tree');
 const Levelup = require('levelup');
 const Leveldown = require('leveldown');
 const RLP = require('rlp');
 const Config = require("./config.json")
 
-const emptyStorageRoot = '0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
+const emptyStorageRoot = '56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
 
 // Connect to the chaindata db
 const db = Levelup(Leveldown(Config.DB_ADDRESS));
+
+
 
 // streamTrie and return all the key and values
 function streamTrie(db, root) {
     return new Promise(function (resolve, reject) {
         const trie = new Trie(db, root);
-        var allData = {};
+        var allData = [];
 
         trie.createReadStream()
             .on('data', function (data) {
                 //values are rlp encoded
-                allData[data.key.toString('hex')] = RLP.decode(data.value);
-                // for debugging
-                // console.log(data.key.toString('hex'));
+                var dataDecoded = {};
+                dataDecoded['key'] = data.key.toString('hex');
+                var valueDecoded = [];
+                RLP.decode(data.value).forEach(value => {
+                    valueDecoded.push(value.toString('hex'));
+                })
+                dataDecoded['value'] = valueDecoded;
+                allData.push(dataDecoded);
             })
             .on('end', function () {
                 resolve(allData);
@@ -43,53 +50,60 @@ function calculateStorageSize(db, storageRoot) {
     })
 }
 
-// geth the state size of an account on a certain stateRoot
-function getStorageRoot(db, stateRoot, accountKey) {
-    return new Promise(function (resolve, reject) {
-        var storageRoot = 0;
-        streamTrie(db, stateRoot)
-            .then(data => {
-                if (accountKey in data) {
-                    storageRoot = '0x' + data[accountKey][2].toString('hex');
-                    resolve(storageRoot);
-                } else {
-                    // if not found than reject 
-                    resolve(null)
-                }
-            }).catch(function onRejected(error) {
-                console.error("Get Storage Root Error:\n\n");
-                console.log(error)
-            });
-    })
-}
-
 function testStateRoot(statelist) {
 
-    // for each stateRoot, get the storage size of the account 
-    const getStateRootPromiseBatch =
+    const getRawBatch =
         Object.values(
             statelist
         ).map(
             _stateRoot => streamTrie(db, _stateRoot)
         );
 
-    Promise.all(getStateRootPromiseBatch).then(stateRoot => {
-        for (i = 0; i < Object.keys(statelist).length; i++) {
-            height = Object.keys(statelist)[i];
-            // if stateRoot[i] does not exist
-            if (Object.keys(stateRoot[i]).length === 0) {
+    Promise.all(getRawBatch).then(rawBatch => {
+        rawBatch.forEach(raw => {
+            index = rawBatch.indexOf(raw);
+            height = height = Object.keys(statelist)[index];
+            if (raw.length === 0) {
+
                 console.log(height + ': empty!');
             } else {
+                raw.forEach(data => {
+                    if (data.value[2] != emptyStorageRoot) {
+                        console.log(data.key)
+                        console.log(data.value)
+                        console.log("\n\n");
+                    }
+                })
                 console.log(height + ': Notempty!');
-                console.log(Object.keys(stateRoot[i]));
             }
-        }
+
+        })
     })
 
 }
 
+// geth the state size of an account on a certain stateRoot
+function getStorageRoot(db, stateRoot, accountKey) {
+    return new Promise(function (resolve, reject) {
+
+        //Creating a trie object
+        var trie = new Trie(db, stateRoot);
+
+        trie.get(accountKey, function (err, value) {
+            if (err) {
+                reject(new Error(err))
+            }
+            var valudeDecoded = RLP.decode(value)
+            var storageRoot = valudeDecoded[2].toString('hex')
+            resolve("0x" + storageRoot);
+        })
+    })
+}
+
+
+
 function getAccountSizes(db, stateRootList, accountKey) {
-    return new Promise(function (resolve) {
+    return new Promise(function (resolve, reject) {
 
         const getStorageRootPromiseBatch =
             Object.values(
@@ -105,7 +119,10 @@ function getAccountSizes(db, stateRootList, accountKey) {
                     );
                 return Promise.all(caculateStorageSizePromiseBatch)
             })
-            .catch(console.log)
+            .catch(function onRejected(error) {
+                console.error("Get Storage Root Error:\n\n");
+                reject(new Error(error))
+            })
             .then(sizes => {
                 var sizesOnHeight = stateRootList;
                 Object.keys(sizesOnHeight).forEach(key => {
@@ -116,8 +133,18 @@ function getAccountSizes(db, stateRootList, accountKey) {
                 resolve(sizesOnHeight);
             })
     })
-
 }
+
+// function main(db, stateRootList, accountList) {
+//     return new Promise(function(resolve,reject) {
+
+//         const getAccountSize
+
+//         accountList.forEach(key => {
+//             getAccountSizes(db, stateRootList, key).then(console.log)
+//         })
+//     })
+// }
 
 const stateRootList = require(Config.STATE_ROOT_INPUT_ADDRESS);
 
@@ -126,10 +153,13 @@ const StateRootList_test = require('./testStateRootList.json');
 const AccountKeyList_test = require('./accounts.json');
 
 const stateRoot_test = "0x8a8a6963b30486fe99890a0f0d76f488c78af637befd095c7e98e92a5b31e2c4";
-const StorageRoot_test = "0x66f4b2aa02ea0500c90c595b57d4a30aad982e1723db282eb0de8e641fdb0f9e";
-const AccountKey_test = "5c8f7a9b0f6d27af8b2fbb5ddd8be7b92d3cbe7be9b681b0818f6672ad4d9ed7";
+const StorageRoot_test = "0xb3f65a145df45e5605b2b09b353d9b64820e02ec41fff6d2c9d2325f59938060";
+const AccountKey_test = "0x5747bb9272f0e913002a9732536530096d0e6a9b1ab678e542be81d2e32aeea9";
 
 
-// testStateRoot(StateRootList_test)
 
-getAccountSizes(db, stateRootList, AccountKey_test).then(console.log)
+// testStateRoot({"0": stateRoot_test})
+
+// getAccountSizes(db, stateRootList, AccountKey_test).then(console.log)
+
+getStorageRoot(db,stateRoot_test,AccountKey_test).then(console.log)
