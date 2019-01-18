@@ -7,6 +7,6 @@
     "ACCOUNT_ADDRESS_LIST": "./output/accounts.json",
     "BLOCK_STEP": 28800,
     "CONNECT_WITH_RPC": false,
-    "RESULT_ADDRESS" : "./output.result.json"
+    "RESULT_ADDRESS" : "./output.result.csv"
 
 }
