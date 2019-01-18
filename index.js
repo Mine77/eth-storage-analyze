@@ -142,23 +142,48 @@ function getStorageSizeList(db, stateRootList, accountAddress) {
     })
 }
 
+
+function convertResult2CSV(result, stateRootList) {
+    return new Promise(function (resolve) {
+        var csv = "Contract Address,";
+
+        // add height as header to the csv
+        Object.keys(stateRootList).forEach(height => {
+            csv = csv + height + ",";
+        })
+        csv = csv.slice(0, -1) + '\n';
+
+        //add size data to the csv
+        Object.keys(result).forEach(address => {
+            csv = csv+address+",";
+
+            Object.values(result[address]).forEach(size => {
+                csv = csv + size + ","
+            })
+            csv = csv.slice(0, -1) + '\n';
+        })
+
+        resolve(csv);
+    })
+}
+
 function main(db, stateRootList, accountList) {
     return new Promise(function (resolve, reject) {
 
         const getAccountSizeBatch =
             accountList.map(accountAddress => getStorageSizeList(db, stateRootList, accountAddress));
-        
+
         Promise.all(getAccountSizeBatch)
-        .then(accountSizeBatch => {
-            var accountSizes = {}
-            for(i=0;i<accountList.length;i++) {
-                accountSizes[accountList[i]] = accountSizeBatch[i]
-            }
-            resolve(accountSizes);
-        })
-        .catch(function onRejected(error) {
-            reject(new Error(error))
-        });
+            .then(accountSizeBatch => {
+                var accountSizes = {}
+                for (i = 0; i < accountList.length; i++) {
+                    accountSizes[accountList[i]] = accountSizeBatch[i]
+                }
+                resolve(accountSizes);
+            })
+            .catch(function onRejected(error) {
+                reject(new Error(error))
+            });
 
     })
 }
@@ -170,21 +195,19 @@ const stateRoot_test = "8a8a6963b30486fe99890a0f0d76f488c78af637befd095c7e98e92a
 const StorageRoot_test = "b3f65a145df45e5605b2b09b353d9b64820e02ec41fff6d2c9d2325f59938060";
 const AccountKey_test = "5747bb9272f0e913002a9732536530096d0e6a9b1ab678e542be81d2e32aeea9";
 
-
-
 // testStateRoot({"0": stateRoot_test})
-
 // getStorageRoot(db, stateRoot_test, AccountKey_test).then(console.log)
-
-// main(db, stateRootList, AccountKeyList_test).then(console.log)
-
 // getStorageSizeList(db, stateRootList, AccountKey_test).then(console.log)
 
 
-main(db,stateRootList,accountKeyList).then(result => {
-    var fs = require('fs');
-    fs.writeFile(Config.RESULT_ADDRESS, JSON.stringify(result), 'utf8', function (err) {
-        if (err) throw err;
-        console.log('complete');
-    });
-})
+
+main(db, stateRootList, accountKeyList)
+    .then(result => {
+        convertResult2CSV(result, stateRootList).then(csv => {
+            var fs = require('fs');
+            fs.writeFile(Config.RESULT_ADDRESS, csv, 'utf8', function (err) {
+                if (err) throw err;
+                console.log('Export Completd!');
+            });
+        })
+    })
