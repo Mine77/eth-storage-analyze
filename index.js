@@ -3,6 +3,8 @@ const Levelup = require('levelup');
 const Leveldown = require('leveldown');
 const RLP = require('rlp');
 const Config = require("./config.json")
+const PromiseBar = require("promise.bar");
+PromiseBar.enable();
 
 const emptyStorageRoot = '56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
 
@@ -155,7 +157,7 @@ function convertResult2CSV(result, stateRootList) {
 
         //add size data to the csv
         Object.keys(result).forEach(address => {
-            csv = csv+address+",";
+            csv = csv + address + ",";
 
             Object.values(result[address]).forEach(size => {
                 csv = csv + size + ","
@@ -173,7 +175,9 @@ function main(db, stateRootList, accountList) {
         const getAccountSizeBatch =
             accountList.map(accountAddress => getStorageSizeList(db, stateRootList, accountAddress));
 
-        Promise.all(getAccountSizeBatch)
+        PromiseBar.all(getAccountSizeBatch, {
+                label: "Get Accounts Size",
+            })
             .then(accountSizeBatch => {
                 var accountSizes = {}
                 for (i = 0; i < accountList.length; i++) {
