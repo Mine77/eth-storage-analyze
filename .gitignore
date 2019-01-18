@@ -65,6 +65,3 @@ typings/
 
 # config files
 config.json
-
-# output
-output/*
