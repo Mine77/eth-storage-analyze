@@ -1,5 +1,7 @@
 // run this script to get a list of script list
 var Web3 = require('web3');
+const PromiseBar = require("promise.bar");
+PromiseBar.enable();
 
 const config = require('./config.json');
 
@@ -23,13 +25,15 @@ function getBatchStateRoot(height, step) {
             })
         ).filter(
             // get needed block height according to the step
-            _height => (_height % step === 1 || _height===height)
+            _height => (_height % step === 1 || _height === height)
         ).map(
             // return the promise function according to the height
             _height => web3.eth.getBlock(_height)
         )
 
-    return Promise.all(batchRequests)
+    return PromiseBar.all(batchRequests, {
+        label: "Get stateRoot List"
+    })
 }
 
 
@@ -45,6 +49,6 @@ web3.eth.getBlockNumber()
         var fs = require('fs');
         fs.writeFile(config.STATE_ROOT_OUTPUT_ADDRESS, JSON.stringify(StateRootList), 'utf8', function (err) {
             if (err) throw err;
-            console.log('complete');
+            console.log('Export State Root List Completed');
         });
     })
