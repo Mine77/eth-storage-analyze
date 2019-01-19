@@ -13,13 +13,15 @@ When the account is a contract account, there will be a StorageTree with its `st
 
 So to calculate the storage size of a smartcontract, we first need to stream the StateTrie of with a block's `stateRoot`, then we use the `hash(CONTRACT_ADDRESS)` as the key to search of its `storageRoot`. Then stream this StorageTrie to get a key-value array. Every key-value pairs takes a storage slot of 64bytes. So just calculate how many key-value pairs are there and multiple it with 64 bytes, which will give you the size of the state storage of this contract on this block height.
 
+To get the address list of all the contract, I personally use a modified Geth client called `gethye`, (thanks to [@yejiayu](https://github.com/yejiayu) for helping me on this. I named this client after your name). If you got another method to get this address list, I'd be more than happy to know.
+
 ## Files
 
-`index.js` reads the contract address from the `contract_address.json` and stateRoot from `output/StateRootList.json`, and print an array of key-value pairs, where key is the block height and value is the state storage size of this contract on this height.
+`index.js` reads the contract address from the `data/address.json` and stateRoot from `data/StateRootList.json`, and for every address, the script print an array of key-value pairs, where key is the block height and value is the state storage size of this contract on this height. The result will be writen to `data/result.csv`.
 
-`scan_stateroot.js` returns the file `output/StateRootList.json` with a list of stateRoot hash by query a full node throw JSON-RPC.
+`scan_stateroot.js` returns the file `data/StateRootList.json` with a list of stateRoot hash by query a full node throw JSON-RPC.
 
-`config.json` has the configs for setting addresses and block step.
+`config.json` has the configs for setting addresses and block step etc.
 
 ## Usage
 First, you need to run a [Geth](https://geth.ethereum.org/install/) client to get the database `chaindata`. Use the shell script below will start a Geth process in the background in the fullnode mode (necessary for getting chaindata). 
@@ -67,9 +69,3 @@ node index.js
 ## Reference
 * [Diving into Ethereum’s world state](https://medium.com/cybermiles/diving-into-ethereums-world-state-c893102030ed)
 * [GitHub: Merkle Particia Trie](https://github.com/ethereumjs/merkle-patricia-tree)
-
-
-## To do
-
-- [ ] Find a way to get a list of contract address
-* use a modified geth client to print contract addresses out.
