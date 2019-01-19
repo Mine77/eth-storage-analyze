@@ -31,7 +31,7 @@ screen -dmS geth geth --syncmode "full" --cache=1024
 
 Install dependecies
 ```
-yarn install
+npm install
 ```
 
 To get a list of stateRoot
@@ -39,7 +39,10 @@ To get a list of stateRoot
 node scan_stateroot.js
 ```
 
-to be continued......
+To get the result csv
+```
+node index.js
+```
 
 
 ## Config
@@ -49,7 +52,15 @@ to be continued......
     "IPC_ADDRESS": "/Users/User/Library/Ethereum/geth.ipc",
     "RPC_ADDRESS": "http://0.0.0.0:8545/", // you can choose to use RPC or IPC to connect to a node
     "DB_ADDRESS": "/Users/User/Library/Ethereum/geth/chaindata",
+
+    "STATE_ROOT_OUTPUT_ADDRESS": "./data/StateRootList.json", // the address that scan_stateroot.js output to
+    "STATE_ROOT_INPUT_ADDRESS": "./data/StateRootList.json", // the address that index.js 
+    "ACCOUNT_ADDRESS_LIST": "./data/accounts.json", // the address that index.js 
+    "RESULT_ADDRESS" : "./data.result.csv" // the address that the result output to
+
     "BLOCK_STEP": 28800  // (60*60*24)/15 * 5 = 5days, i.e. get a stateRoot every 5 days
+
+    "CONNECT_WITH_RPC": false, // if scan_stateroot.js should connect to node via RPC (falst for IPC)
 }
 ```
 
@@ -61,3 +72,4 @@ to be continued......
 ## To do
 
 - [ ] Find a way to get a list of contract address
+* use a modified geth client to print contract addresses out.
