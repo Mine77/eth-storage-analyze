@@ -69,3 +69,4 @@ node index.js
 ## Reference
 * [Diving into Ethereum’s world state](https://medium.com/cybermiles/diving-into-ethereums-world-state-c893102030ed)
 * [GitHub: Merkle Particia Trie](https://github.com/ethereumjs/merkle-patricia-tree)
+* [Nervos Network](https://github.com/nervosnetwork)
