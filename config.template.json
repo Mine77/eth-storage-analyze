@@ -1,12 +1,12 @@
 {
-    "IPC_ADDRESS": "/Users/User/Library/Ethereum/geth.ipc",
+    "IPC_ADDRESS": "/Users/name/Library/Ethereum/geth.ipc",
     "RPC_ADDRESS": "http://0.0.0.0:8545/",
-    "DB_ADDRESS": "/Users/User/Library/Ethereum/geth/chaindata",
+    "DB_ADDRESS": "/Users/haichaozhu/Library/Ethereum/geth/chaindata",
     "STATE_ROOT_OUTPUT_ADDRESS": "./data/StateRootList.json",
     "STATE_ROOT_INPUT_ADDRESS": "./data/StateRootList.json",
-    "ACCOUNT_ADDRESS_LIST": "./data/accounts.json",
-    "BLOCK_STEP": 28800,
+    "ACCOUNT_LIST_ADDRESS": "/Users/name/bin/address.json",
+    "BLOCK_STEP": 10000,
     "CONNECT_WITH_RPC": false,
-    "RESULT_ADDRESS" : "./data.result.csv"
+    "RESULT_ADDRESS" : "./data/result.csv"
 
 }

@@ -1,4 +1,4 @@
-const Trie = require('merkle-patricia-tree');
+const Trie = require('merkle-patricia-tree/secure');
 const Levelup = require('levelup');
 const Leveldown = require('leveldown');
 const RLP = require('rlp');
@@ -10,6 +10,20 @@ const emptyStorageRoot = '56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622f
 
 // Connect to the chaindata db
 const db = Levelup(Leveldown(Config.DB_ADDRESS));
+
+function readAddressFile(path) {
+    var fs = require('fs');
+    const stream = fs.createReadStream(path);
+
+
+    stream.on('readable', function () {
+        let address;
+        address = stream.read(44);
+        console.log(String(address));
+
+    });
+
+}
 
 // streamTrie and return all the key and values
 function streamTrie(db, root) {
@@ -62,7 +76,7 @@ function testStateRoot(statelist) {
     Promise.all(getRawBatch).then(rawBatch => {
         rawBatch.forEach(raw => {
             index = rawBatch.indexOf(raw);
-            height = height = Object.keys(statelist)[index];
+            height = Object.keys(statelist)[index];
             if (raw.length === 0) {
 
                 console.log(height + ': empty!');
@@ -94,7 +108,7 @@ function add0xPrefix(str) {
 function getStorageRoot(db, stateRoot, accountKey) {
     return new Promise(function (resolve, reject) {
         stateRoot = add0xPrefix(stateRoot);
-        accountKey = add0xPrefix(accountKey);
+        // accountKey = add0xPrefix(accountKey);
 
         //Creating a trie object
         var trie = new Trie(db, stateRoot);
@@ -169,49 +183,79 @@ function convertResult2CSV(result, stateRootList) {
     })
 }
 
-function main(db, stateRootList, accountList) {
-    return new Promise(function (resolve, reject) {
+function main(db, stateRootList, accountList_path, result_path) {
 
-        const getAccountSizeBatch =
-            accountList.map(accountAddress => getStorageSizeList(db, stateRootList, accountAddress));
+    const fsRead = require('fs');
+    const fsWrite = require('fs');
+    const stream = fsRead.createReadStream(accountList_path);
 
-        PromiseBar.all(getAccountSizeBatch, {
-                label: "Get Accounts Size",
-            })
-            .then(accountSizeBatch => {
-                var accountSizes = {}
-                for (i = 0; i < accountList.length; i++) {
-                    accountSizes[accountList[i]] = accountSizeBatch[i]
-                }
-                resolve(accountSizes);
-            })
-            .catch(function onRejected(error) {
-                reject(new Error(error))
-            });
+    // remove the existed csv file
+    try {
+        fsWrite.unlinkSync(result_path)
+        //file removed
+    } catch (err) {
+        console.error(err)
+    }
+    var initcsv = "Contract Address,";
 
+    // add height as header to the csv
+    Object.keys(stateRootList).forEach(height => {
+        initcsv = initcsv + height + ",";
+    })
+    initcsv = initcsv.slice(0, -1) + '\n';
+    fsWrite.writeFile(result_path, initcsv, function (err) {
+        if (err) throw err;
+    });
+
+    stream.on('readable', function () {
+        let raw;
+
+        while (raw = stream.read(44)) {
+            let address = String(raw).substr(0, 42)
+
+            let csv = ""
+            getStorageSizeList(db, stateRootList, address)
+                .then(accountSizeBatch => {
+                    csv = csv + address + ",";
+                    Object.values(accountSizeBatch).forEach(size => {
+                        csv = csv + size + ",";
+                    })
+                    csv = csv.slice(0, -1) + '\n';
+                    // console.log(csv);
+                    fsWrite.appendFile(result_path, csv, function (err) {
+                        if (err) throw err;
+                    });
+                })
+        }
     })
 }
 
 const stateRootList = require(Config.STATE_ROOT_INPUT_ADDRESS);
-const accountKeyList = require(Config.ACCOUNT_LIST_ADDRESS);
 
-const stateRoot_test = "8a8a6963b30486fe99890a0f0d76f488c78af637befd095c7e98e92a5b31e2c4";
-const StorageRoot_test = "b3f65a145df45e5605b2b09b353d9b64820e02ec41fff6d2c9d2325f59938060";
-const AccountKey_test = "5747bb9272f0e913002a9732536530096d0e6a9b1ab678e542be81d2e32aeea9";
+const stateRoot_test = "0xe8b330fe7b24c08a8792a1af7f732b8065d03cfc456f506f4c9ea1651a44fd48";
+// const AccountKey_test = "ffbf5e17acaefdd291820cfea154909363f896621155df2e426d88e15252a6bd";
+const AccountAddress_test = '0xC669eAAD75042BE84daAF9b461b0E868b9Ac1871';
+const StorageRoot_test = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 
-// testStateRoot({"0": stateRoot_test})
-// getStorageRoot(db, stateRoot_test, AccountKey_test).then(console.log)
-// getStorageSizeList(db, stateRootList, AccountKey_test).then(console.log)
+// readAddressFile(accountKeyList)
+// testStateRoot({"150001": "0xe8b330fe7b24c08a8792a1af7f732b8065d03cfc456f506f4c9ea1651a44fd48"})
+// getStorageRoot(db, stateRoot_test, AccountAddress_test).then(console.log)
+// getStorageSizeList(db, stateRootList, AccountAddress_test).then(console.log)
+
+
+// main(db, stateRootList, accountKeyList)
+//     .then(result => {
+//         convertResult2CSV(result, stateRootList)
+//             .then(csv => {
+//                 var fs = require('fs');
+//                 fs.writeFile(Config.RESULT_ADDRESS, csv, 'utf8', function (err) {
+//                     if (err) throw err;
+//                     console.log('Export Completd!');
+//                 });
+//             })
+//     })
 
 
 
-main(db, stateRootList, accountKeyList)
-    .then(result => {
-        convertResult2CSV(result, stateRootList).then(csv => {
-            var fs = require('fs');
-            fs.writeFile(Config.RESULT_ADDRESS, csv, 'utf8', function (err) {
-                if (err) throw err;
-                console.log('Export Completd!');
-            });
-        })
-    })
+
+main(db, stateRootList, Config.ACCOUNT_LIST_ADDRESS, Config.RESULT_ADDRESS)
