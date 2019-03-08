@@ -5,6 +5,8 @@ PromiseBar.enable();
 
 const config = require('./config.json');
 
+BlockHeight = config.BLOCK_HEIGHT;
+
 BlockStep = config.BLOCK_STEP;
 
 if (config.CONNECT_WITH_RPC) {
@@ -38,8 +40,7 @@ function getBatchStateRoot(height, step) {
 
 
 // geth tip block height, then get batch block request, then make stateRoot list array, then store a JSON file
-web3.eth.getBlockNumber()
-    .then(number => getBatchStateRoot(number, BlockStep))
+getBatchStateRoot(BlockHeight, BlockStep)
     .then(blocks => {
         var StateRootList = {};
         blocks.forEach(block => {
