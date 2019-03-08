@@ -213,15 +213,16 @@ function main(db, stateRootList, accountList_path, result_path) {
         total: fileStat.size / addressStringSize,
         incomplete: ' '
     });
+    console.log(fileStat)
 
-    streamRead.on('readable', function () {
+    streamRead.on('readable', async function () {
         let raw;
-
+        console.log("ready");
         while (raw = streamRead.read(addressStringSize)) {
             let address = String(raw).substr(0, addressStringSize-1)
 
             let csv = ""
-            getStorageSizeList(db, stateRootList, address)
+            await getStorageSizeList(db, stateRootList, address)
                 .then(accountSizeBatch => {
                     csv = csv + address + ",";
                     Object.values(accountSizeBatch).forEach(size => {
