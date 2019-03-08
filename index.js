@@ -3,10 +3,10 @@ const Levelup = require('levelup');
 const Leveldown = require('leveldown');
 const RLP = require('rlp');
 const Config = require("./config.json")
-const PromiseBar = require("promise.bar");
-PromiseBar.enable();
+var ProgressBar = require('progress');
 
 const emptyStorageRoot = '56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
+const addressStringSize = 43;
 
 // Connect to the chaindata db
 const db = Levelup(Leveldown(Config.DB_ADDRESS));
@@ -187,7 +187,7 @@ function main(db, stateRootList, accountList_path, result_path) {
 
     const fsRead = require('fs');
     const fsWrite = require('fs');
-    const stream = fsRead.createReadStream(accountList_path);
+    const streamRead = fsRead.createReadStream(accountList_path);
 
     // remove the existed csv file
     try {
@@ -207,11 +207,18 @@ function main(db, stateRootList, accountList_path, result_path) {
         if (err) throw err;
     });
 
-    stream.on('readable', function () {
+    // init progress bar
+    fileStat = fsRead.statSync(accountList_path)
+    var bar = new ProgressBar('processing [:bar] :current/:total :etas', {
+        total: fileStat.size / addressStringSize,
+        incomplete: ' '
+    });
+
+    streamRead.on('readable', function () {
         let raw;
 
-        while (raw = stream.read(44)) {
-            let address = String(raw).substr(0, 42)
+        while (raw = streamRead.read(addressStringSize)) {
+            let address = String(raw).substr(0, addressStringSize-1)
 
             let csv = ""
             getStorageSizeList(db, stateRootList, address)
@@ -225,6 +232,7 @@ function main(db, stateRootList, accountList_path, result_path) {
                     fsWrite.appendFile(result_path, csv, function (err) {
                         if (err) throw err;
                     });
+                    bar.tick();
                 })
         }
     })
@@ -241,21 +249,5 @@ const StorageRoot_test = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc00162
 // testStateRoot({"150001": "0xe8b330fe7b24c08a8792a1af7f732b8065d03cfc456f506f4c9ea1651a44fd48"})
 // getStorageRoot(db, stateRoot_test, AccountAddress_test).then(console.log)
 // getStorageSizeList(db, stateRootList, AccountAddress_test).then(console.log)
-
-
-// main(db, stateRootList, accountKeyList)
-//     .then(result => {
-//         convertResult2CSV(result, stateRootList)
-//             .then(csv => {
-//                 var fs = require('fs');
-//                 fs.writeFile(Config.RESULT_ADDRESS, csv, 'utf8', function (err) {
-//                     if (err) throw err;
-//                     console.log('Export Completd!');
-//                 });
-//             })
-//     })
-
-
-
 
 main(db, stateRootList, Config.ACCOUNT_LIST_ADDRESS, Config.RESULT_ADDRESS)
