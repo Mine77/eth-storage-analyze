@@ -210,7 +210,7 @@ function main(db, stateRootList, accountList_path, result_path) {
 
     // init progress bar
     fileStat = fsRead.statSync(accountList_path)
-    var bar = new ProgressBar('processing [:bar] :current/:total :etas', {
+    var bar = new ProgressBar('processing [:bar] :etas', {
         total: fileStat.size / addressStringSize,
         incomplete: ' '
     });
@@ -219,11 +219,16 @@ function main(db, stateRootList, accountList_path, result_path) {
     //read from file
     streamRead.on('readable', async function () {
         let raw;
-        console.log("ready");
+        var promiseBatch = [];
+        var addressList = [];
+        // console.log("ready");
         while (raw = streamRead.read(addressStringSize)) {
-            let address = String(raw).substr(0, addressStringSize-1)
+            let address = String(raw).substr(0, addressStringSize - 1)
+
+            bar.interrupt(address + ' (' + bar.curr + '/' + bar.total + ') ')
 
             // calculate storage size and write to csv
+            // use await for preventing overuse of memory 
             let csv = ""
             await getStorageSizeList(db, stateRootList, address)
                 .then(accountSizeBatch => {
