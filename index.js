@@ -5,7 +5,7 @@ const RLP = require('rlp');
 const Config = require("./config.json")
 var ProgressBar = require('progress');
 
-const emptyStorageRoot = '56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
+const emptyStorageRoot = '0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
 const addressStringSize = 43;
 
 // Connect to the chaindata db
@@ -55,6 +55,7 @@ function calculateStorageSize(db, storageRoot) {
     return new Promise(function (resolve, reject) {
 
         if (storageRoot === null) resolve(null);
+        if (storageRoot === emptyStorageRoot) resolve(0);
         streamTrie(db, storageRoot).then(data => {
                 resolve(data.length);
             })
@@ -215,12 +216,14 @@ function main(db, stateRootList, accountList_path, result_path) {
     });
     console.log(fileStat)
 
+    //read from file
     streamRead.on('readable', async function () {
         let raw;
         console.log("ready");
         while (raw = streamRead.read(addressStringSize)) {
             let address = String(raw).substr(0, addressStringSize-1)
 
+            // calculate storage size and write to csv
             let csv = ""
             await getStorageSizeList(db, stateRootList, address)
                 .then(accountSizeBatch => {
@@ -239,16 +242,18 @@ function main(db, stateRootList, accountList_path, result_path) {
     })
 }
 
-const stateRootList = require(Config.STATE_ROOT_INPUT_ADDRESS);
 
-const stateRoot_test = "0xe8b330fe7b24c08a8792a1af7f732b8065d03cfc456f506f4c9ea1651a44fd48";
+
+// const stateRoot_test = "0xe8b330fe7b24c08a8792a1af7f732b8065d03cfc456f506f4c9ea1651a44fd48";
 // const AccountKey_test = "ffbf5e17acaefdd291820cfea154909363f896621155df2e426d88e15252a6bd";
-const AccountAddress_test = '0xC669eAAD75042BE84daAF9b461b0E868b9Ac1871';
-const StorageRoot_test = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+// const AccountAddress_test = '0xC669eAAD75042BE84daAF9b461b0E868b9Ac1871';
+// const StorageRoot_test = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 
 // readAddressFile(accountKeyList)
 // testStateRoot({"150001": "0xe8b330fe7b24c08a8792a1af7f732b8065d03cfc456f506f4c9ea1651a44fd48"})
 // getStorageRoot(db, stateRoot_test, AccountAddress_test).then(console.log)
 // getStorageSizeList(db, stateRootList, AccountAddress_test).then(console.log)
 
+
+const stateRootList = require(Config.STATE_ROOT_INPUT_ADDRESS);
 main(db, stateRootList, Config.ACCOUNT_LIST_ADDRESS, Config.RESULT_ADDRESS)
